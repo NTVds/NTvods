@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NTVDS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <header class="bg-gray-800 p-4 text-center text-2xl font-bold">
+    NTVDS - Pedidos de Conteúdo
+  </header>  <main class="p-4 max-w-xl mx-auto">
+    <section class="bg-gray-800 p-6 rounded-xl shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Fazer Pedido</h2>
+      <form id="pedidoForm" class="space-y-4">
+        <input type="text" name="nome" placeholder="Seu nome ou apelido" required class="w-full p-2 rounded bg-gray-700 border border-gray-600" />
+        <select name="tipo" required class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+          <option value="">Selecione o tipo</option>
+          <option value="canal">Canal</option>
+          <option value="filme">Filme</option>
+          <option value="serie">Série</option>
+        </select>
+        <input type="text" name="conteudo" placeholder="Nome do conteúdo" required class="w-full p-2 rounded bg-gray-700 border border-gray-600" />
+        <textarea name="observacoes" rows="3" placeholder="Observações extras (opcional)" class="w-full p-2 rounded bg-gray-700 border border-gray-600"></textarea>
+        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">Enviar Pedido</button>
+      </form>
+      <p id="mensagemSucesso" class="text-green-400 mt-4 hidden">Pedido enviado com sucesso!</p>
+    </section><p class="text-center mt-8 text-sm text-gray-400">
+  Painel de administração: <a href="admin.html" class="underline text-blue-400">Clique aqui</a>
+</p>
+
+  </main>  <script>
+    const form = document.getElementById('pedidoForm');
+    const mensagem = document.getElementById('mensagemSucesso');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const dados = new FormData(form);
+      const pedido = {
+        nome: dados.get('nome'),
+        tipo: dados.get('tipo'),
+        conteudo: dados.get('conteudo'),
+        observacoes: dados.get('observacoes'),
+        data: new Date().toLocaleString()
+      };
+
+      let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos.push(pedido);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+
+      form.reset();
+      mensagem.classList.remove('hidden');
+      setTimeout(() => mensagem.classList.add('hidden'), 3000);
+    });
+  </script></body>
+</html>
