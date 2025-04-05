@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel NTVDS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <div id="login" class="flex items-center justify-center h-screen">
+    <form id="loginForm" class="bg-gray-800 p-6 rounded shadow-md w-full max-w-xs">
+      <h2 class="text-xl font-bold mb-4 text-center">Login do Painel</h2>
+      <input type="password" id="senha" placeholder="Digite a senha" required class="w-full mb-4 p-2 rounded bg-gray-700 border border-gray-600" />
+      <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">Entrar</button>
+      <p id="erro" class="text-red-500 text-sm mt-2 hidden text-center">Senha incorreta</p>
+    </form>
+  </div>
+
+  <main id="painel" class="p-4 max-w-4xl mx-auto hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Painel de Pedidos - NTVDS</h1>
+      <button id="exportarBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Exportar Pedidos</button>
+    </div>
+    <input type="text" id="filtro" placeholder="Buscar por nome ou conteúdo..." class="w-full p-2 rounded mb-4 bg-gray-700 border border-gray-600" />
+    <div id="listaPedidos" class="space-y-4"></div>
+  </main>
+
+  <script>
+    const senhaCorreta = 'admin123';
+    const loginForm = document.getElementById('loginForm');
+    const senhaInput = document.getElementById('senha');
+    const painel = document.getElementById('painel');
+    const login = document.getElementById('login');
+    const erro = document.getElementById('erro');
+    const listaPedidos = document.getElementById('listaPedidos');
+    const filtroInput = document.getElementById('filtro');
+    const exportarBtn = document.getElementById('exportarBtn');
+
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (senhaInput.value === senhaCorreta) {
+        login.classList.add('hidden');
+        painel.classList.remove('hidden');
+        exibirPedidos();
+      } else {
+        erro.classList.remove('hidden');
+      }
+    });
+
+    filtroInput.addEventListener('input', exibirPedidos);
+
+    function exibirPedidos() {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const filtro = filtroInput.value.toLowerCase();
+      listaPedidos.innerHTML = '';
+
+      pedidos.filter(p =>
+        p.nome.toLowerCase().includes(filtro) ||
+        p.conteudo.toLowerCase().includes(filtro)
+      ).reverse().forEach((pedido, index) => {
+        const div = document.createElement('div');
+        div.className = 'p-4 bg-gray-700 rounded shadow';
+        div.innerHTML = `
+          <p><strong>Nome:</strong> ${pedido.nome}</p>
+          <p><strong>Tipo:</strong> ${pedido.tipo}</p>
+          <p><strong>Conteúdo:</strong> ${pedido.conteudo}</p>
+          <p><strong>Observações:</strong> ${pedido.observacoes || 'Nenhuma'}</p>
+          <p class="text-sm text-gray-400">${pedido.data}</p>
+          <button onclick="marcarConcluido(${index})" class="mt-2 bg-green-500 hover:bg-green-600 px-3 py-1 rounded">Concluir</button>
+        `;
+        listaPedidos.appendChild(div);
+      });
+    }
+
+    function marcarConcluido(index) {
+      let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos.splice(index, 1);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+      exibirPedidos();
+    }
+
+    exportarBtn.addEventListener('click', () => {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const blob = new Blob([JSON.stringify(pedidos, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pedidos_ntvds.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
