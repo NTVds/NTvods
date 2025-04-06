@@ -11,7 +11,7 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-    input, select, textarea, button {
+    input, textarea, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -24,77 +24,89 @@
       color: white;
       cursor: pointer;
     }
-    img {
-      max-width: 100px;
-      margin: 10px 0;
+    #preview {
+      margin-top: 20px;
+    }
+    #preview img {
+      max-width: 150px;
+      display: block;
     }
   </style>
 </head>
 <body>
   <h1>NTvods - Fazer Pedido</h1>
   <input type="text" id="search" placeholder="Buscar filme ou série..." />
-  <div id="results"></div>
+  
+  <div id="preview">
+    <img id="poster" src="" style="display: none;" />
+    <p id="titulo"></p>
+    <p id="tipoPreview"></p>
+  </div>
+
   <form id="pedidoForm">
     <input type="hidden" id="tmdb_id" name="tmdb_id" />
     <input type="hidden" id="imagem_url" name="imagem_url" />
-    <input type="text" id="tipo" name="tipo" placeholder="Filme ou Série" readonly/>
+    <input type="text" id="tipo" name="tipo" placeholder="Filme ou Série" readonly />
     <textarea name="observacao" placeholder="Observações adicionais..."></textarea>
     <button type="submit">Enviar Pedido</button>
   </form>
 
   <script>
-    const API_KEY = '3c1fdfaa3c7c6e0e52d8c6bc785be251'; // Chave pública TMDB
-    const searchInput = document.getElementById('search');
-    const results = document.getElementById('results');
+    const API_KEY = '<<SUA_CHAVE_TMDB>>'; // Substitua pela sua
+    const search = document.getElementById('search');
+    const poster = document.getElementById('poster');
+    const titulo = document.getElementById('titulo');
+    const tipoPreview = document.getElementById('tipoPreview');
     const tmdb_id = document.getElementById('tmdb_id');
     const imagem_url = document.getElementById('imagem_url');
-    const tipoInput = document.getElementById('tipo');
+    const tipo = document.getElementById('tipo');
 
-    searchInput.addEventListener('input', async () => {
-      const query = searchInput.value.trim();
+    let timeout = null;
+
+    search.addEventListener('input', () => {
+      clearTimeout(timeout);
+      const query = search.value.trim();
       if (query.length < 2) return;
-      const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${query}`);
-      const data = await res.json();
-      results.innerHTML = '';
-      data.results.forEach(item => {
-        if (item.media_type === 'movie' || item.media_type === 'tv') {
-          const div = document.createElement('div');
-          div.innerHTML = `
-            <img src="https://image.tmdb.org/t/p/w200${item.poster_path}" />
-            <p><strong>${item.title || item.name}</strong> (${item.media_type})</p>
-            <button type="button" onclick="selectItem(${item.id}, '${item.media_type}', 'https://image.tmdb.org/t/p/w200${item.poster_path}')">Selecionar</button>
-            <hr/>
-          `;
-          results.appendChild(div);
-        }
-      });
-    });
 
-    function selectItem(id, tipo, imagem) {
-      tmdb_id.value = id;
-      tipoInput.value = tipo === 'movie' ? 'Filme' : 'Série';
-      imagem_url.value = imagem;
-      alert("Conteúdo selecionado!");
-    }
+      timeout = setTimeout(async () => {
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        const first = data.results.find(item => item.media_type === 'movie' || item.media_type === 'tv');
+        if (first) {
+          const title = first.title || first.name;
+          const imgUrl = `https://image.tmdb.org/t/p/w300${first.poster_path}`;
+          const type = first.media_type === 'movie' ? 'Filme' : 'Série';
+
+          poster.src = imgUrl;
+          poster.style.display = 'block';
+          titulo.textContent = title;
+          tipoPreview.textContent = type;
+
+          // Preencher os campos escondidos
+          tmdb_id.value = first.id;
+          imagem_url.value = imgUrl;
+          tipo.value = type;
+        }
+      }, 500); // espera meio segundo após digitar
+    });
 
     document.getElementById('pedidoForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
-      const data = new URLSearchParams(formData);
+      const data = new URLSearchParams();
+      formData.forEach((value, key) => data.append(key, encodeURIComponent(value)));
 
-      try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbxjcdPA0Sz-7cAKy4S40cDOSFGrvaSJJCVgOFv7a8-oHF-lndERM-PMitcP4JD8TnVA_Q/exec", {
-          method: "POST",
-          body: data
-        });
-        const text = await response.text();
-        alert(text);
-        e.target.reset();
-        results.innerHTML = '';
-        tipoInput.value = '';
-      } catch (error) {
-        alert("Erro ao enviar o pedido. Tente novamente.");
-      }
+      await fetch('https://script.google.com/macros/s/AKfycbxjcdPA0Sz-7cAKy4S40cDOSFGrvaSJJCVgOFv7a8-oHF-lndERM-PMitcP4JD8TnVA_Q/exec', {
+        method: 'POST',
+        body: data
+      });
+
+      alert('Pedido enviado com sucesso!');
+      document.getElementById('pedidoForm').reset();
+      poster.style.display = 'none';
+      titulo.textContent = '';
+      tipoPreview.textContent = '';
     });
   </script>
 </body>
