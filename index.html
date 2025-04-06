@@ -42,11 +42,11 @@
   <input type="text" id="search" placeholder="Buscar filme ou série..." />
   <div id="results"></div>
 
-  <form id="pedidoForm">
+  <form id="pedidoForm" method="POST" action="https://script.google.com/macros/s/AKfycbxjcdPA0Sz-7cAKy4S40cDOSFGrvaSJJCVgOFv7a8-oHF-lndERM-PMitcP4JD8TnVA_Q/exec">
     <input type="hidden" id="tmdb_id" name="tmdb_id" />
     <input type="hidden" id="imagem_url" name="imagem_url" />
-    <input type="text" id="tipo" name="tipo" placeholder="Filme ou Série" readonly/>
-    <textarea name="observacao" placeholder="Observações adicionais..."></textarea>
+    <input type="text" id="tipo" name="tipo" placeholder="Filme ou Série" readonly required />
+    <textarea name="observacao" placeholder="Observações adicionais..." required></textarea>
     <button type="submit">Enviar Pedido</button>
   </form>
 
@@ -83,31 +83,7 @@
       tipoInput.value = tipo === 'movie' ? 'Filme' : 'Série';
       imagem_url.value = imagem;
       alert("Conteúdo selecionado!");
-    }
-
-    document.getElementById('pedidoForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbxjcdPA0Sz-7cAKy4S40cDOSFGrvaSJJCVgOFv7a8-oHF-lndERM-PMitcP4JD8TnVA_Q/exec', {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-
-        alert('Pedido enviado com sucesso!');
-        e.target.reset();
-        results.innerHTML = '';
-      } catch (error) {
-        alert('Erro ao enviar o pedido.');
-        console.error(error);
-      }
-    });
+    };
   </script>
 </body>
 </html>
