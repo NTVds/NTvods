@@ -3,104 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel NTVDS</title>
+  <title>Painel NTvods</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: white;
+    }
+    .card {
+      background-color: #1f1f1f;
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-  <!-- Tela de Login -->
-  <div id="login" class="flex items-center justify-center h-screen">
-    <form id="loginForm" class="bg-gray-800 p-6 rounded shadow-md w-full max-w-xs">
-      <h2 class="text-xl font-bold mb-4 text-center">Login do Painel</h2>
-      <input type="password" id="senha" placeholder="Digite a senha" required class="w-full mb-4 p-2 rounded bg-gray-700 border border-gray-600" />
-      <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">Entrar</button>
-      <p id="erro" class="text-red-500 text-sm mt-2 hidden text-center">Senha incorreta</p>
-    </form>
+<body class="p-4">
+
+  <div class="flex justify-between items-center mb-6">
+    <img src="https://drive.google.com/uc?export=view&id=1WvUMxZq8oxctvFZ4tK97FhbnAFgOpw8E" alt="Logo NTvods" class="h-16">
+    <h1 class="text-3xl font-bold text-purple-500">Painel de Pedidos - NTvods</h1>
   </div>
 
-  <!-- Painel Principal -->
-  <main id="painel" class="p-4 max-w-5xl mx-auto hidden">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-4">
-        <img src="https://i.imgur.com/wKqEKIE.png" alt="Logo NTVDS" class="h-14 w-auto rounded" />
-        <h1 class="text-2xl font-bold">Painel de Pedidos - NTVDS</h1>
-      </div>
-      <button id="exportarBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Exportar Pedidos</button>
-    </div>
-    <input type="text" id="filtro" placeholder="Buscar por nome ou conteúdo..." class="w-full p-2 rounded mb-4 bg-gray-700 border border-gray-600" />
-    <div id="listaPedidos" class="space-y-4"></div>
-  </main>
+  <div id="pedidos" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"></div>
 
   <script>
-    const senhaCorreta = 'Asd12345$';
-    const loginForm = document.getElementById('loginForm');
-    const senhaInput = document.getElementById('senha');
-    const painel = document.getElementById('painel');
-    const login = document.getElementById('login');
-    const erro = document.getElementById('erro');
-    const listaPedidos = document.getElementById('listaPedidos');
-    const filtroInput = document.getElementById('filtro');
-    const exportarBtn = document.getElementById('exportarBtn');
+    const url = "https://script.google.com/macros/s/AKfycbyELSuR_ib7ytv05pTVg0bgqlNQZbKpT_aMsia9_hX679tDGb6DTQwXpfhhudhlmAD0Nw/exec";
 
-    loginForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      if (senhaInput.value === senhaCorreta) {
-        login.classList.add('hidden');
-        painel.classList.remove('hidden');
-        buscarPedidos();
-      } else {
-        erro.classList.remove('hidden');
-      }
-    });
-
-    filtroInput.addEventListener('input', exibirPedidos);
-
-    let todosPedidos = [];
-
-    async function buscarPedidos() {
-      try {
-        const resposta = await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec');
-        const dados = await resposta.json();
-        todosPedidos = dados.pedidos || [];
-        exibirPedidos();
-      } catch (error) {
-        console.error('Erro ao buscar pedidos:', error);
-        alert('Erro ao carregar pedidos. Verifique sua conexão ou script.');
-      }
-    }
-
-    function exibirPedidos() {
-      const filtro = filtroInput.value.toLowerCase();
-      listaPedidos.innerHTML = '';
-
-      todosPedidos.filter(p =>
-        p.nome.toLowerCase().includes(filtro) ||
-        p.conteudo.toLowerCase().includes(filtro)
-      ).reverse().forEach((pedido, index) => {
-        const div = document.createElement('div');
-        div.className = 'p-4 bg-gray-700 rounded shadow';
-
-        div.innerHTML = `
-          ${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem" class="w-24 h-auto mb-2 rounded" />` : ''}
-          <p><strong>Nome:</strong> ${pedido.nome}</p>
-          <p><strong>Tipo:</strong> ${pedido.tipo}</p>
-          <p><strong>Conteúdo:</strong> ${pedido.conteudo}</p>
-          <p><strong>ID TMDB:</strong> ${pedido.tmdbId || 'N/A'}</p>
-          <p><strong>Observações:</strong> ${pedido.observacoes || 'Nenhuma'}</p>
-          <p class="text-sm text-gray-400">${pedido.data}</p>
-        `;
-        listaPedidos.appendChild(div);
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById("pedidos");
+        data.pedidos.forEach(pedido => {
+          const div = document.createElement("div");
+          div.className = "card p-4 rounded-xl shadow-lg";
+          div.innerHTML = `
+            <img src="${pedido.imagem}" alt="${pedido.conteudo}" class="rounded mb-2 w-full h-48 object-cover">
+            <h2 class="text-xl font-bold text-purple-400">${pedido.conteudo}</h2>
+            <p><strong>Nome:</strong> ${pedido.nome}</p>
+            <p><strong>Tipo:</strong> ${pedido.tipo}</p>
+            <p><strong>ID TMDB:</strong> ${pedido.tmdbId}</p>
+            <p><strong>Observações:</strong> ${pedido.observacoes || 'Nenhuma'}</p>
+            <p class="text-sm text-gray-400 mt-2"><strong>Data:</strong> ${pedido.data}</p>
+          `;
+          container.appendChild(div);
+        });
       });
-    }
-
-    exportarBtn.addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(todosPedidos, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'pedidos_ntvds.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
   </script>
 </body>
 </html>
