@@ -2,50 +2,167 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Painel NTvods</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
-      background-color: #0d0d0d;
-      color: white;
+      margin: 0;
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
-    .card {
-      background-color: #1f1f1f;
+
+    header {
+      background: #4b0082;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .login, .painel {
+      display: none;
+      padding: 20px;
+    }
+
+    .ativo {
+      display: block;
+    }
+
+    input, select {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .pedido {
+      background: #1a1a1a;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .pedido img {
+      width: 80px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .filtros {
+      margin-bottom: 20px;
+    }
+
+    .filtros input, .filtros select {
+      background: #333;
+      color: #fff;
+    }
+
+    button {
+      background: #4b0082;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5e2a91;
     }
   </style>
 </head>
-<body class="p-4">
+<body>
+  <header>
+    <h1>Painel de Pedidos - NTvods</h1>
+  </header>
 
-  <div class="flex justify-between items-center mb-6">
-    <img src="https://drive.google.com/uc?export=view&id=1WvUMxZq8oxctvFZ4tK97FhbnAFgOpw8E" alt="Logo NTvods" class="h-16">
-    <h1 class="text-3xl font-bold text-purple-500">Painel de Pedidos - NTvods</h1>
+  <div class="login ativo" id="login">
+    <h2>Login</h2>
+    <input type="password" id="senha" placeholder="Digite a senha"/>
+    <button onclick="entrar()">Entrar</button>
   </div>
 
-  <div id="pedidos" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"></div>
+  <div class="painel" id="painel">
+    <div class="filtros">
+      <input type="text" id="busca" placeholder="Buscar por nome" oninput="filtrarPedidos()" />
+      <select id="filtroTipo" onchange="filtrarPedidos()">
+        <option value="">Todos os Tipos</option>
+        <option value="Filme">Filme</option>
+        <option value="Série">Série</option>
+        <option value="Canal">Canal</option>
+      </select>
+    </div>
+    <div id="listaPedidos"></div>
+  </div>
 
   <script>
-    const url = "https://script.google.com/macros/s/AKfycbyELSuR_ib7ytv05pTVg0bgqlNQZbKpT_aMsia9_hX679tDGb6DTQwXpfhhudhlmAD0Nw/exec";
+    const senhaCorreta = "Asd12345$";
+    const urlAPI = "https://script.google.com/macros/s/AKfycbyELSuR_ib7ytv05pTVg0bgqlNQZbKpT_aMsia9_hX679tDGb6DTQwXpfhhudhlmAD0Nw/exec";
+    let pedidos = [];
 
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        const container = document.getElementById("pedidos");
-        data.pedidos.forEach(pedido => {
-          const div = document.createElement("div");
-          div.className = "card p-4 rounded-xl shadow-lg";
-          div.innerHTML = `
-            <img src="${pedido.imagem}" alt="${pedido.conteudo}" class="rounded mb-2 w-full h-48 object-cover">
-            <h2 class="text-xl font-bold text-purple-400">${pedido.conteudo}</h2>
-            <p><strong>Nome:</strong> ${pedido.nome}</p>
-            <p><strong>Tipo:</strong> ${pedido.tipo}</p>
-            <p><strong>ID TMDB:</strong> ${pedido.tmdbId}</p>
-            <p><strong>Observações:</strong> ${pedido.observacoes || 'Nenhuma'}</p>
-            <p class="text-sm text-gray-400 mt-2"><strong>Data:</strong> ${pedido.data}</p>
-          `;
-          container.appendChild(div);
-        });
+    function entrar() {
+      const senha = document.getElementById("senha").value;
+      if (senha === senhaCorreta) {
+        document.getElementById("login").classList.remove("ativo");
+        document.getElementById("painel").classList.add("ativo");
+        carregarPedidos();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+
+    async function carregarPedidos() {
+      try {
+        const res = await fetch(urlAPI);
+        const dados = await res.json();
+        pedidos = dados.reverse(); // mais recentes primeiro
+        mostrarPedidos(pedidos);
+      } catch (err) {
+        alert("Erro ao carregar pedidos.");
+        console.error(err);
+      }
+    }
+
+    function mostrarPedidos(lista) {
+      const container = document.getElementById("listaPedidos");
+      container.innerHTML = "";
+
+      if (lista.length === 0) {
+        container.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+        return;
+      }
+
+      lista.forEach(pedido => {
+        const div = document.createElement("div");
+        div.className = "pedido";
+        div.innerHTML = `
+          <img src="${pedido.imagem}" alt="Capa">
+          <div>
+            <strong>${pedido.nome}</strong><br/>
+            Tipo: ${pedido.tipo} <br/>
+            ID TMDB: ${pedido.id_tmdb} <br/>
+            Observações: ${pedido.observacoes || 'Nenhuma'}
+          </div>
+        `;
+        container.appendChild(div);
       });
+    }
+
+    function filtrarPedidos() {
+      const termo = document.getElementById("busca").value.toLowerCase();
+      const tipo = document.getElementById("filtroTipo").value;
+      const filtrados = pedidos.filter(p =>
+        (!termo || p.nome.toLowerCase().includes(termo)) &&
+        (!tipo || p.tipo === tipo)
+      );
+      mostrarPedidos(filtrados);
+    }
   </script>
 </body>
 </html>
