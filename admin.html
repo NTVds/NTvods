@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Painel de Pedidos - NTvods</title>
+  <title>Painel NTvods</title>
   <style>
     body {
-      background-color: #000;
+      background-color: #0c0c0c;
       color: #fff;
       font-family: Arial, sans-serif;
       margin: 0;
@@ -16,34 +16,25 @@
       color: #a259ff;
       text-align: center;
     }
-    .filtros {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    input, select {
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-    }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
+      margin-top: 20px;
     }
     .card {
-      background-color: #1a1a1a;
-      padding: 15px;
+      background-color: #1e1e1e;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      padding: 16px;
+      box-shadow: 0 0 10px rgba(162, 89, 255, 0.3);
     }
     .card img {
       width: 100%;
       border-radius: 8px;
       margin-bottom: 10px;
+    }
+    .card p {
+      margin: 5px 0;
     }
     .card strong {
       color: #a259ff;
@@ -52,63 +43,38 @@
 </head>
 <body>
   <h1>Painel de Pedidos - NTvods</h1>
-
-  <div class="filtros">
-    <input type="text" id="filtroNome" placeholder="Buscar por nome" />
-    <select id="filtroTipo">
-      <option value="">Todos os Tipos</option>
-      <option value="Filme">Filme</option>
-      <option value="Série">Série</option>
-      <option value="Canal">Canal</option>
-    </select>
-  </div>
-
   <div class="grid" id="painel"></div>
 
   <script>
-    const url = "https://script.google.com/macros/s/AKfycbxf54cFUYGMxxbndHmXd2FXdJ-d03JLtZzbAjwB0PHFubeiy7D28C2W9_O_awOGTLcPCA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzwOn6nzFrJYbdsTq7Gs2aNpufHwU9poJ8Zn5Xo0MrPRKh2Blwa-p279-pbXH2o10UyMQ/exec";
 
     async function carregarPedidos() {
       try {
-        const resposta = await fetch(url);
+        const resposta = await fetch(API_URL);
         const pedidos = await resposta.json();
-        exibirPedidos(pedidos);
+        renderizar(pedidos);
       } catch (erro) {
-        alert("Erro ao carregar pedidos.");
+        document.getElementById("painel").innerHTML = "<p>Erro ao carregar pedidos.</p>";
       }
     }
 
-    function exibirPedidos(pedidos) {
+    function renderizar(pedidos) {
       const painel = document.getElementById("painel");
       painel.innerHTML = "";
 
-      const filtroNome = document.getElementById("filtroNome").value.toLowerCase();
-      const filtroTipo = document.getElementById("filtroTipo").value;
-
-      const filtrados = pedidos.filter(pedido => {
-        return (
-          pedido.nome.toLowerCase().includes(filtroNome) &&
-          (filtroTipo === "" || pedido.tipo === filtroTipo)
-        );
-      });
-
-      filtrados.forEach(pedido => {
+      pedidos.forEach(pedido => {
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-          <img src="${pedido.imagem}" alt="Imagem">
-          <p><strong>Nome:</strong> ${pedido.nome}</p>
-          <p><strong>Tipo:</strong> ${pedido.tipo}</p>
-          <p><strong>Conteúdo:</strong> ${pedido.conteudo}</p>
-          <p><strong>Observações:</strong> ${pedido.observacoes}</p>
-          <p><strong>Data:</strong> ${pedido.data}</p>
+          ${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem">` : ""}
+          <p><strong>Data:</strong> ${pedido.data || ''}</p>
+          <p><strong>TMDB ID:</strong> ${pedido.tmdbId || ''}</p>
+          <p><strong>Tipo:</strong> ${pedido.tipo || ''}</p>
+          <p><strong>Observações:</strong> ${pedido.observacoes || ''}</p>
         `;
         painel.appendChild(card);
       });
     }
-
-    document.getElementById("filtroNome").addEventListener("input", carregarPedidos);
-    document.getElementById("filtroTipo").addEventListener("change", carregarPedidos);
 
     carregarPedidos();
   </script>
