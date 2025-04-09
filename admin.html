@@ -7,162 +7,108 @@
   <style>
     body {
       margin: 0;
-      background: #0d0d0d;
-      color: #fff;
       font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
     }
 
     header {
-      background: #4b0082;
-      padding: 20px;
+      background-color: #5c1d91;
+      padding: 16px;
       text-align: center;
+      font-size: 24px;
+      font-weight: bold;
     }
 
-    h1 {
-      margin: 0;
-    }
-
-    .login, .painel {
-      display: none;
+    .container {
       padding: 20px;
     }
 
-    .ativo {
-      display: block;
-    }
-
-    input, select {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    .pedido {
-      background: #1a1a1a;
-      margin: 10px 0;
-      padding: 15px;
+    .card {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
       border-radius: 10px;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .pedido img {
-      width: 80px;
-      height: auto;
-      border-radius: 8px;
-    }
-
-    .filtros {
+      padding: 16px;
       margin-bottom: 20px;
     }
 
-    .filtros input, .filtros select {
-      background: #333;
-      color: #fff;
-    }
-
-    button {
-      background: #4b0082;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
+    .card img {
+      max-width: 100%;
       border-radius: 8px;
-      cursor: pointer;
+      margin-top: 10px;
     }
 
-    button:hover {
-      background: #5e2a91;
+    .campo {
+      margin-bottom: 8px;
+    }
+
+    .campo strong {
+      color: #a86ff9;
+    }
+
+    .search-box {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Painel de Pedidos - NTvods</h1>
-  </header>
-
-  <div class="login ativo" id="login">
-    <h2>Login</h2>
-    <input type="password" id="senha" placeholder="Digite a senha"/>
-    <button onclick="entrar()">Entrar</button>
-  </div>
-
-  <div class="painel" id="painel">
-    <div class="filtros">
-      <input type="text" id="busca" placeholder="Buscar por nome" oninput="filtrarPedidos()" />
-      <select id="filtroTipo" onchange="filtrarPedidos()">
-        <option value="">Todos os Tipos</option>
-        <option value="Filme">Filme</option>
-        <option value="Série">Série</option>
-        <option value="Canal">Canal</option>
-      </select>
+  <header>Painel de Pedidos - NTvods</header>
+  <div class="container">
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Buscar por tipo, ID TMDB ou data...">
     </div>
-    <div id="listaPedidos"></div>
+    <div id="pedidos"></div>
   </div>
 
   <script>
-    const senhaCorreta = "Asd12345$";
-    const urlAPI = "https://corsproxy.io/?https://script.google.com/macros/s/AKfycbyELSuR_ib7ytv05pTVg0bgqlNQZbKpT_aMsia9_hX679tDGb6DTQwXpfhhudhlmAD0Nw/exec";
-    let pedidos = [];
-
-    function entrar() {
-      const senha = document.getElementById("senha").value;
-      if (senha === senhaCorreta) {
-        document.getElementById("login").classList.remove("ativo");
-        document.getElementById("painel").classList.add("ativo");
-        carregarPedidos();
-      } else {
-        alert("Senha incorreta!");
-      }
-    }
+    const API_URL = "https://script.google.com/macros/s/AKfycbzTbTK4Q4G8yQsSc5X6WHS_jMLdYKHOupLTO9seYXNlCvUVez0hyZ-PGIzjO4naolSVvQ/exec";
 
     async function carregarPedidos() {
       try {
-        const res = await fetch(urlAPI);
-        const dados = await res.json();
-        pedidos = dados.reverse(); // mais recentes primeiro
-        mostrarPedidos(pedidos);
-      } catch (err) {
-        alert("Erro ao carregar pedidos.");
-        console.error(err);
+        const response = await fetch(API_URL);
+        const pedidos = await response.json();
+        renderizarPedidos(pedidos);
+      } catch (error) {
+        document.getElementById('pedidos').innerHTML = `<p>Erro ao carregar pedidos.</p>`;
       }
     }
 
-    function mostrarPedidos(lista) {
-      const container = document.getElementById("listaPedidos");
+    function renderizarPedidos(pedidos) {
+      const container = document.getElementById('pedidos');
       container.innerHTML = "";
 
-      if (lista.length === 0) {
-        container.innerHTML = "<p>Nenhum pedido encontrado.</p>";
-        return;
-      }
+      const busca = document.getElementById('search').value.toLowerCase();
 
-      lista.forEach(pedido => {
-        const div = document.createElement("div");
-        div.className = "pedido";
-        div.innerHTML = `
-          <img src="${pedido.imagem}" alt="Capa">
-          <div>
-            <strong>${pedido.nome}</strong><br/>
-            Tipo: ${pedido.tipo} <br/>
-            ID TMDB: ${pedido.id_tmdb} <br/>
-            Observações: ${pedido.observacoes || 'Nenhuma'}
-          </div>
-        `;
-        container.appendChild(div);
-      });
+      pedidos
+        .filter(pedido =>
+          pedido.tipo?.toLowerCase().includes(busca) ||
+          pedido.tmdb_id?.toString().includes(busca) ||
+          pedido.data?.toLowerCase().includes(busca)
+        )
+        .forEach(pedido => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="campo"><strong>Data:</strong> ${pedido.data || ''}</div>
+            <div class="campo"><strong>TMDB ID:</strong> ${pedido.tmdb_id || ''}</div>
+            <div class="campo"><strong>Tipo:</strong> ${pedido.tipo || ''}</div>
+            <div class="campo"><strong>Observação:</strong> ${pedido.observacao || ''}</div>
+            ${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem do conteúdo">` : ''}
+          `;
+          container.appendChild(card);
+        });
     }
 
-    function filtrarPedidos() {
-      const termo = document.getElementById("busca").value.toLowerCase();
-      const tipo = document.getElementById("filtroTipo").value;
-      const filtrados = pedidos.filter(p =>
-        (!termo || p.nome.toLowerCase().includes(termo)) &&
-        (!tipo || p.tipo === tipo)
-      );
-      mostrarPedidos(filtrados);
-    }
+    document.getElementById('search').addEventListener('input', carregarPedidos);
+    carregarPedidos();
   </script>
 </body>
 </html>
