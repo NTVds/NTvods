@@ -12,48 +12,70 @@
       margin: 0;
       padding: 20px;
     }
+
     h1 {
       color: #a259ff;
       text-align: center;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
       margin-top: 20px;
     }
+
     .card {
       background-color: #1e1e1e;
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 0 10px rgba(162, 89, 255, 0.3);
     }
+
     .card img {
       width: 100%;
       border-radius: 8px;
       margin-bottom: 10px;
     }
+
     .card p {
       margin: 5px 0;
     }
+
     .card strong {
       color: #a259ff;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
   <h1>Painel de Pedidos - NTvods</h1>
+  <input type="text" id="busca" placeholder="Buscar por tipo, ID TMDB ou data...">
   <div class="grid" id="painel"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzwOn6nzFrJYbdsTq7Gs2aNpufHwU9poJ8Zn5Xo0MrPRKh2Blwa-p279-pbXH2o10UyMQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxo1ShJfzrBDhXFUWu0uyJO3vA6wF3ewqAPgrt389sbX412NCLpqhct__GTUJnEaW1PZA/exec";
 
     async function carregarPedidos() {
       try {
         const resposta = await fetch(API_URL);
         const pedidos = await resposta.json();
         renderizar(pedidos);
-      } catch (erro) {
+
+        // Ativar filtro após carregamento
+        document.getElementById("busca").addEventListener("input", function () {
+          filtrarPedidos(pedidos, this.value.toLowerCase());
+        });
+
+      } catch (error) {
         document.getElementById("painel").innerHTML = "<p>Erro ao carregar pedidos.</p>";
       }
     }
@@ -74,6 +96,15 @@
         `;
         painel.appendChild(card);
       });
+    }
+
+    function filtrarPedidos(pedidos, termo) {
+      const filtrados = pedidos.filter(p =>
+        (p.tipo || '').toLowerCase().includes(termo) ||
+        (p.tmdbId || '').toLowerCase().includes(termo) ||
+        (p.data || '').toLowerCase().includes(termo)
+      );
+      renderizar(filtrados);
     }
 
     carregarPedidos();
