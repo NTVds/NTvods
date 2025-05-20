@@ -1,110 +1,118 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel NTvods</title>
   <style>
     body {
-      background-color: #0c0c0c;
+      background-color: #0e0e0e;
       color: #fff;
       font-family: Arial, sans-serif;
-      margin: 0;
       padding: 20px;
     }
 
     h1 {
-      color: #a259ff;
+      color: #b472f0;
       text-align: center;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-top: 20px;
     }
 
-    .card {
+    th, td {
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
       background-color: #1e1e1e;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 0 10px rgba(162, 89, 255, 0.3);
+      color: #b472f0;
     }
 
-    .card img {
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    img {
+      width: 80px;
+      height: auto;
+      border-radius: 6px;
+    }
+
+    input {
       width: 100%;
-      border-radius: 8px;
       margin-bottom: 10px;
-    }
-
-    .card p {
-      margin: 5px 0;
-    }
-
-    .card strong {
-      color: #a259ff;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 20px;
-      border-radius: 8px;
+      padding: 10px;
       border: none;
-      font-size: 16px;
+      border-radius: 5px;
+      background: #2e2e2e;
+      color: #fff;
     }
   </style>
 </head>
 <body>
+
   <h1>Painel de Pedidos - NTvods</h1>
-  <input type="text" id="busca" placeholder="Buscar por tipo, ID TMDB ou data...">
-  <div class="grid" id="painel"></div>
+
+  <input type="text" id="filtro" placeholder="Filtrar por nome, tipo ou observação..." oninput="filtrarTabela()">
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>TMDB ID</th>
+        <th>Tipo</th>
+        <th>Imagem</th>
+        <th>Observações</th>
+      </tr>
+    </thead>
+    <tbody id="conteudo-tabela">
+      <tr><td colspan="5">Carregando...</td></tr>
+    </tbody>
+  </table>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxo1ShJfzrBDhXFUWu0uyJO3vA6wF3ewqAPgrt389sbX412NCLpqhct__GTUJnEaW1PZA/exec";
-
     async function carregarPedidos() {
       try {
-        const resposta = await fetch(API_URL);
-        const pedidos = await resposta.json();
-        renderizar(pedidos);
+        const resposta = await fetch("https://script.google.com/macros/s/AKfycbxA8s6VkEz2v3MSmFaFdtGn2iLyeB9dR3_TKkYhwsYvpPacGKwFx2PFEml441vRKNi1QA/exec");
+        const dados = await resposta.json();
 
-        // Ativar filtro após carregamento
-        document.getElementById("busca").addEventListener("input", function () {
-          filtrarPedidos(pedidos, this.value.toLowerCase());
+        const tabela = document.getElementById("conteudo-tabela");
+        tabela.innerHTML = "";
+
+        dados.reverse().forEach(item => {
+          const linha = document.createElement("tr");
+
+          linha.innerHTML = `
+            <td>${item.data || ''}</td>
+            <td>${item.tmdbId || ''}</td>
+            <td>${item.tipo || ''}</td>
+            <td><img src="${item.imagem || ''}" alt="Imagem"></td>
+            <td>${item.observacoes || ''}</td>
+          `;
+
+          tabela.appendChild(linha);
         });
 
-      } catch (error) {
-        document.getElementById("painel").innerHTML = "<p>Erro ao carregar pedidos.</p>";
+      } catch (erro) {
+        console.error("Erro ao carregar pedidos:", erro);
+        document.getElementById("conteudo-tabela").innerHTML = "<tr><td colspan='5'>Erro ao carregar dados.</td></tr>";
       }
     }
 
-    function renderizar(pedidos) {
-      const painel = document.getElementById("painel");
-      painel.innerHTML = "";
+    function filtrarTabela() {
+      const filtro = document.getElementById("filtro").value.toLowerCase();
+      const linhas = document.querySelectorAll("#conteudo-tabela tr");
 
-      pedidos.forEach(pedido => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          ${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem">` : ""}
-          <p><strong>Data:</strong> ${pedido.data || ''}</p>
-          <p><strong>TMDB ID:</strong> ${pedido.tmdbId || ''}</p>
-          <p><strong>Tipo:</strong> ${pedido.tipo || ''}</p>
-          <p><strong>Observações:</strong> ${pedido.observacoes || ''}</p>
-        `;
-        painel.appendChild(card);
+      linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(filtro) ? "" : "none";
       });
-    }
-
-    function filtrarPedidos(pedidos, termo) {
-      const filtrados = pedidos.filter(p =>
-        (p.tipo || '').toLowerCase().includes(termo) ||
-        (p.tmdbId || '').toLowerCase().includes(termo) ||
-        (p.data || '').toLowerCase().includes(termo)
-      );
-      renderizar(filtrados);
     }
 
     carregarPedidos();
