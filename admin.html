@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Painel NTvods</title>
   <style>
     body {
@@ -11,47 +11,29 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-
-    h1 {
-      color: #b472f0;
-      text-align: center;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       border: 1px solid #444;
-      padding: 8px;
-      text-align: center;
+      padding: 10px;
+      text-align: left;
     }
-
     th {
-      background-color: #1e1e1e;
-      color: #b472f0;
+      background-color: #2a0055;
     }
-
-    tr:nth-child(even) {
-      background-color: #1a1a1a;
-    }
-
     img {
       width: 80px;
-      height: auto;
-      border-radius: 6px;
-    }
-
-    input {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 10px;
-      border: none;
       border-radius: 5px;
-      background: #2e2e2e;
-      color: #fff;
+    }
+    input[type="password"] {
+      width: 200px;
+      margin-bottom: 10px;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -59,63 +41,61 @@
 
   <h1>Painel de Pedidos - NTvods</h1>
 
-  <input type="text" id="filtro" placeholder="Filtrar por nome, tipo ou observação..." oninput="filtrarTabela()">
+  <input type="password" id="senha" placeholder="Digite a senha"/>
+  <button onclick="verificarSenha()">Entrar</button>
 
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>TMDB ID</th>
-        <th>Tipo</th>
-        <th>Imagem</th>
-        <th>Observações</th>
-      </tr>
-    </thead>
-    <tbody id="conteudo-tabela">
-      <tr><td colspan="5">Carregando...</td></tr>
-    </tbody>
-  </table>
+  <div id="painel" class="hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Observações</th>
+          <th>ID TMDB</th>
+          <th>Imagem</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaPedidos"></tbody>
+    </table>
+  </div>
 
   <script>
-    async function carregarPedidos() {
-      try {
-        const resposta = await fetch("https://script.google.com/macros/s/AKfycbxA8s6VkEz2v3MSmFaFdtGn2iLyeB9dR3_TKkYhwsYvpPacGKwFx2PFEml441vRKNi1QA/exec");
-        const dados = await resposta.json();
+    const senhaCorreta = 'Asd12345$';
 
-        const tabela = document.getElementById("conteudo-tabela");
-        tabela.innerHTML = "";
-
-        dados.reverse().forEach(item => {
-          const linha = document.createElement("tr");
-
-          linha.innerHTML = `
-            <td>${item.data || ''}</td>
-            <td>${item.tmdbId || ''}</td>
-            <td>${item.tipo || ''}</td>
-            <td><img src="${item.imagem || ''}" alt="Imagem"></td>
-            <td>${item.observacoes || ''}</td>
-          `;
-
-          tabela.appendChild(linha);
-        });
-
-      } catch (erro) {
-        console.error("Erro ao carregar pedidos:", erro);
-        document.getElementById("conteudo-tabela").innerHTML = "<tr><td colspan='5'>Erro ao carregar dados.</td></tr>";
+    function verificarSenha() {
+      const senha = document.getElementById('senha').value;
+      if (senha === senhaCorreta) {
+        document.getElementById('painel').classList.remove('hidden');
+        carregarPedidos();
+      } else {
+        alert('Senha incorreta.');
       }
     }
 
-    function filtrarTabela() {
-      const filtro = document.getElementById("filtro").value.toLowerCase();
-      const linhas = document.querySelectorAll("#conteudo-tabela tr");
-
-      linhas.forEach(linha => {
-        const texto = linha.textContent.toLowerCase();
-        linha.style.display = texto.includes(filtro) ? "" : "none";
-      });
+    function carregarPedidos() {
+      fetch('https://script.google.com/macros/s/AKfycbz9qmaA1ZJfJItuMNyEo5-_25vqW-ly3GNz38ubhLEn2dkfO-kFD36UEK-wJG4uPGJorg/exec')
+        .then(res => res.json())
+        .then(data => {
+          const tabela = document.getElementById('tabelaPedidos');
+          tabela.innerHTML = '';
+          data.reverse().forEach(pedido => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${pedido.nome || ''}</td>
+              <td>${pedido.tipo || ''}</td>
+              <td>${pedido.observacoes || ''}</td>
+              <td>${pedido.tmdbId || ''}</td>
+              <td>${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem"/>` : ''}</td>
+            `;
+            tabela.appendChild(row);
+          });
+        })
+        .catch(err => {
+          alert("Erro ao carregar pedidos.");
+          console.error(err);
+        });
     }
-
-    carregarPedidos();
   </script>
+
 </body>
 </html>
