@@ -1,116 +1,103 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NTvods - Pedido</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedidos NTvods</title>
   <style>
     body {
-      background-color: #0e0e0e;
-      color: #ffffff;
+      background-color: #121212;
+      color: #fff;
       font-family: Arial, sans-serif;
       padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
     }
     input, select, textarea, button {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
-      background-color: #1c1c1c;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 5px;
-    }
-    img {
-      width: 100px;
-      border-radius: 8px;
       margin-top: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
     }
-    .item {
+    button {
+      background-color: #8000ff;
+      color: white;
       cursor: pointer;
-      margin: 10px 0;
     }
-    .item:hover {
-      background-color: #222;
+    button:hover {
+      background-color: #5e00bb;
+    }
+    .result {
+      margin-top: 15px;
+    }
+    .result img {
+      width: 100%;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>Fazer Pedido</h2>
+    <input type="text" id="titulo" placeholder="Digite o nome do conteúdo">
+    <select id="tipo">
+      <option value="Filme">Filme</option>
+      <option value="Série">Série</option>
+      <option value="Canal">Canal</option>
+    </select>
+    <textarea id="obs" placeholder="Observações (opcional)"></textarea>
+    <button onclick="buscarTMDB()">Buscar</button>
+    <div id="result" class="result"></div>
+  </div>  <script>
+    const API_KEY = 'eb93e716b56767d9b0e6d4fdcf25a511';
 
-  <h1>Fazer Pedido</h1>
-  
-  <input type="text" id="nome" placeholder="Seu nome (opcional)"/>
-  <input type="text" id="busca" placeholder="Buscar filme ou série..."/>
-  
-  <div id="resultados"></div>
+    function buscarTMDB() {
+      const titulo = document.getElementById('titulo').value.trim();
+      const tipo = document.getElementById('tipo').value;
+      const obs = document.getElementById('obs').value.trim();
+      const resultDiv = document.getElementById('result');
 
-  <textarea id="observacoes" placeholder="Observações extras"></textarea>
-  <button onclick="enviarPedido()">Enviar Pedido</button>
-
-  <script>
-    let tmdbId = '';
-    let imagem = '';
-    let tipo = '';
-
-    const resultados = document.getElementById('resultados');
-    const apiKey = 'eb93e716b56767d9b0e6d4fdcf25a511';
-
-    document.getElementById('busca').addEventListener('input', function () {
-      const query = this.value;
-      if (query.length < 3) return;
-      fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&language=pt-BR&query=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
-          resultados.innerHTML = '';
-          data.results.forEach(item => {
-            const nome = item.title || item.name;
-            const tipoItem = item.media_type === 'tv' ? 'Série' : 'Filme';
-            const imagemUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.innerHTML = `<strong>${nome}</strong> - ${tipoItem}<br/>${imagemUrl ? `<img src="${imagemUrl}"/>` : ''}`;
-            div.onclick = () => {
-              tmdbId = item.id;
-              imagem = imagemUrl;
-              tipo = tipoItem;
-              resultados.innerHTML = `<p>Selecionado: <strong>${nome}</strong> (${tipo})</p>${imagemUrl ? `<img src="${imagemUrl}"/>` : ''}`;
-            };
-            resultados.appendChild(div);
-          });
-        });
-    });
-
-    function enviarPedido() {
-      const nome = document.getElementById('nome').value;
-      const observacoes = document.getElementById('observacoes').value;
-
-      if (!tmdbId) {
-        alert('Selecione um filme ou série antes de enviar.');
+      if (!titulo) {
+        alert('Digite um nome de conteúdo!');
         return;
       }
 
-      fetch('https://script.google.com/macros/s/AKfycbz9qmaA1ZJfJItuMNyEo5-_25vqW-ly3GNz38ubhLEn2dkfO-kFD36UEK-wJG4uPGJorg/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome,
-          tipo,
-          observacoes,
-          tmdbId,
-          imagem
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        alert("Pedido enviado com sucesso!");
-        window.location.href = data.redirecionamento;
-      })
-      .catch(err => {
-        alert("Erro ao enviar pedido.");
-        console.error(err);
-      });
+      fetch(`https://api.themoviedb.org/3/search/${tipo === 'Filme' ? 'movie' : 'tv'}?api_key=${API_KEY}&query=${encodeURIComponent(titulo)}&language=pt-BR`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.results && data.results.length > 0) {
+            const item = data.results[0];
+            const nome = item.title || item.name;
+            const imagem = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+
+            resultDiv.innerHTML = `
+              <p><strong>${nome}</strong></p>
+              <img src="${imagem}" alt="Imagem">
+              <button onclick="enviarWhatsapp('${nome}', '${tipo}', '${imagem}', \
+                '${obs.replace(/\n/g, ' ')}')">Enviar via WhatsApp</button>
+            `;
+          } else {
+            resultDiv.innerHTML = '<p>Nenhum resultado encontrado.</p>';
+          }
+        });
     }
-  </script>
-</body>
+
+    function enviarWhatsapp(nome, tipo, imagem, obs) {
+      const numero = '5584987181612';
+      let mensagem = `Novo Pedido:%0A%0A`;
+      mensagem += `Título: ${nome}%0A`;
+      mensagem += `Tipo: ${tipo}%0A`;
+      if (obs) mensagem += `Observações: ${obs}%0A`;
+      mensagem += `Imagem: ${imagem}`;
+
+      const link = `https://wa.me/${numero}?text=${mensagem}`;
+      window.open(link, '_blank');
+    }
+  </script></body>
 </html>
