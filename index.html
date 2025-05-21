@@ -3,181 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fazer Pedido - NTvods</title>
+  <title>NTvods - Pedido</title>
   <style>
     body {
-      background-color: #000;
-      color: #fff;
+      background-color: #0e0e0e;
+      color: #ffffff;
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-
-    h1 {
-      color: #b472f0;
-      text-align: center;
-    }
-
-    .form-container {
-      max-width: 400px;
-      margin: auto;
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
-    }
-
-    input, textarea, button {
+    input, select, textarea, button {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: none;
-      background: #222;
+      margin: 10px 0;
+      background-color: #1c1c1c;
       color: #fff;
-    }
-
-    button {
-      background-color: #b472f0;
-      color: black;
-      font-weight: bold;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-
-    .results {
-      background-color: #1a1a1a;
-      border: 1px solid #333;
+      border: 1px solid #444;
       border-radius: 5px;
+    }
+    img {
+      width: 100px;
+      border-radius: 8px;
       margin-top: 10px;
-      max-height: 250px;
-      overflow-y: auto;
     }
-
-    .result-item {
-      padding: 10px;
-      border-bottom: 1px solid #333;
+    .item {
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      margin: 10px 0;
     }
-
-    .result-item img {
-      width: 50px;
-      border-radius: 5px;
-    }
-
-    .result-item:hover {
-      background-color: #333;
+    .item:hover {
+      background-color: #222;
     }
   </style>
 </head>
 <body>
 
-  <h1>Fazer Pedido - NTvods</h1>
+  <h1>Fazer Pedido</h1>
+  
+  <input type="text" id="nome" placeholder="Seu nome (opcional)"/>
+  <input type="text" id="busca" placeholder="Buscar filme ou série..."/>
+  
+  <div id="resultados"></div>
 
-  <div class="form-container">
-    <label>Buscar Filme/Série:</label>
-    <input type="text" id="search" placeholder="Digite o nome..." oninput="buscarTMDB()">
-
-    <div class="results" id="results"></div>
-
-    <input type="hidden" id="titulo">
-    <input type="hidden" id="tipo">
-    <input type="hidden" id="tmdbId">
-    <input type="hidden" id="imagem">
-
-    <label>Observações (erro encontrado):</label>
-    <textarea id="observacoes" placeholder="Informe o erro..."></textarea>
-
-    <button onclick="enviarPedido()">Enviar Pedido</button>
-  </div>
+  <textarea id="observacoes" placeholder="Observações extras"></textarea>
+  <button onclick="enviarPedido()">Enviar Pedido</button>
 
   <script>
-    const API_KEY = "eb93e716b56767d9b0e6d4fdcf25a511"; // TMDB KEY
+    let tmdbId = '';
+    let imagem = '';
+    let tipo = '';
 
-    async function buscarTMDB() {
-      const query = document.getElementById("search").value.trim();
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "";
+    const resultados = document.getElementById('resultados');
+    const apiKey = 'eb93e716b56767d9b0e6d4fdcf25a511';
 
-      if (query.length < 2) return;
+    document.getElementById('busca').addEventListener('input', function () {
+      const query = this.value;
+      if (query.length < 3) return;
+      fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&language=pt-BR&query=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+          resultados.innerHTML = '';
+          data.results.forEach(item => {
+            const nome = item.title || item.name;
+            const tipoItem = item.media_type === 'tv' ? 'Série' : 'Filme';
+            const imagemUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<strong>${nome}</strong> - ${tipoItem}<br/>${imagemUrl ? `<img src="${imagemUrl}"/>` : ''}`;
+            div.onclick = () => {
+              tmdbId = item.id;
+              imagem = imagemUrl;
+              tipo = tipoItem;
+              resultados.innerHTML = `<p>Selecionado: <strong>${nome}</strong> (${tipo})</p>${imagemUrl ? `<img src="${imagemUrl}"/>` : ''}`;
+            };
+            resultados.appendChild(div);
+          });
+        });
+    });
 
-      const urls = [
-        `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`,
-        `https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${query}`
-      ];
+    function enviarPedido() {
+      const nome = document.getElementById('nome').value;
+      const observacoes = document.getElementById('observacoes').value;
 
-      const [filmes, series] = await Promise.all(urls.map(url => fetch(url).then(res => res.json())));
-
-      const resultados = [...(filmes.results || []), ...(series.results || [])];
-
-      resultados.slice(0, 10).forEach(item => {
-        const tipo = item.title ? "Filme" : "Série";
-        const titulo = item.title || item.name;
-        const id = item.id;
-        const imagem = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '';
-
-        const div = document.createElement("div");
-        div.className = "result-item";
-        div.innerHTML = `
-          <img src="${imagem}" alt="Poster">
-          <div>
-            <strong>${titulo}</strong><br>
-            <small>${tipo}</small>
-          </div>
-        `;
-
-        div.onclick = () => {
-          document.getElementById("titulo").value = titulo;
-          document.getElementById("tipo").value = tipo;
-          document.getElementById("tmdbId").value = id;
-          document.getElementById("imagem").value = imagem;
-          document.getElementById("search").value = `${titulo} (${tipo})`;
-          resultsDiv.innerHTML = "";
-        };
-
-        resultsDiv.appendChild(div);
-      });
-    }
-
-    async function enviarPedido() {
-      const titulo = document.getElementById("titulo").value;
-      const tipo = document.getElementById("tipo").value;
-      const tmdbId = document.getElementById("tmdbId").value;
-      const imagem = document.getElementById("imagem").value;
-      const observacoes = document.getElementById("observacoes").value;
-
-      if (!titulo || !tmdbId || !tipo) {
-        alert("Selecione um conteúdo da lista antes de enviar.");
+      if (!tmdbId) {
+        alert('Selecione um filme ou série antes de enviar.');
         return;
       }
 
-      const dados = new FormData();
-      dados.append("nome", titulo);
-      dados.append("tipo", tipo);
-      dados.append("tmdbId", tmdbId);
-      dados.append("imagem", imagem);
-      dados.append("observacoes", observacoes);
-
-      try {
-        await fetch("https://script.google.com/macros/s/AKfycbxA8s6VkEz2v3MSmFaFdtGn2iLyeB9dR3_TKkYhwsYvpPacGKwFx2PFEml441vRKNi1QA/exec", {
-          method: "POST",
-          body: dados
-        });
+      fetch('https://script.google.com/macros/s/AKfycbz9qmaA1ZJfJItuMNyEo5-_25vqW-ly3GNz38ubhLEn2dkfO-kFD36UEK-wJG4uPGJorg/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome,
+          tipo,
+          observacoes,
+          tmdbId,
+          imagem
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
         alert("Pedido enviado com sucesso!");
-        document.getElementById("search").value = "";
-        document.getElementById("observacoes").value = "";
-      } catch (erro) {
+        window.location.href = data.redirecionamento;
+      })
+      .catch(err => {
         alert("Erro ao enviar pedido.");
-        console.error(erro);
-      }
+        console.error(err);
+      });
     }
   </script>
-
 </body>
 </html>
