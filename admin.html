@@ -1,101 +1,513 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Painel NTvods</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin NTvods - Painel de Controle</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #0e0e0e;
+      background: #0f0f0f;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
-      font-family: Arial, sans-serif;
+    }
+
+    /* Login Screen */
+    .login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-box h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* Main Admin Panel */
+    .admin-panel {
+      display: none;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 15px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.2);
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
       padding: 20px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+
+    .filters {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
     }
-    th, td {
-      border: 1px solid #444;
-      padding: 10px;
-      text-align: left;
+
+    .filters input, .filters select {
+      padding: 10px 15px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 14px;
     }
-    th {
-      background-color: #2a0055;
+
+    .filters input {
+      flex: 1;
+      min-width: 200px;
     }
-    img {
-      width: 80px;
-      border-radius: 5px;
+
+    .refresh-btn {
+      background: #4caf50;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
     }
-    input[type="password"] {
-      width: 200px;
+
+    .pedidos-grid {
+      display: grid;
+      gap: 15px;
+    }
+
+    .pedido-card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 20px;
+      transition: transform 0.2s;
+    }
+
+    .pedido-card:hover {
+      transform: translateX(5px);
+    }
+
+    .pedido-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .pedido-titulo {
+      font-size: 18px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .pedido-data {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .pedido-content {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .pedido-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pedido-imagem img {
+      width: 100px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .pedido-info {
+      flex: 1;
+    }
+
+    .pedido-tipo {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #2a2a2a;
+      border-radius: 20px;
+      font-size: 12px;
       margin-bottom: 10px;
     }
-    .hidden {
-      display: none;
+
+    .pedido-obs {
+      background: #2a2a2a;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .pedido-acoes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status-select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .status-pendente { background: #ff9800; color: #000; }
+    .status-em_andamento { background: #2196f3; color: #fff; }
+    .status-concluido { background: #4caf50; color: #fff; }
+
+    .delete-btn {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-btn:hover {
+      background: #d32f2f;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 60px;
+      color: #888;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
   </style>
 </head>
 <body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h2>🔐 Painel Administrativo</h2>
+      <input type="password" id="senha" placeholder="Digite a senha" onkeypress="if(event.key==='Enter') verificarSenha()">
+      <button onclick="verificarSenha()">Entrar</button>
+    </div>
+  </div>
 
-  <h1>Painel de Pedidos - NTvods</h1>
+  <!-- Admin Panel -->
+  <div class="admin-panel" id="adminPanel">
+    <div class="header">
+      <h1>📊 Painel de Pedidos - NTvods</h1>
+      <div class="stats" id="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalPedidos">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pendentesCount">0</div>
+          <div class="stat-label">Pendentes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="andamentoCount">0</div>
+          <div class="stat-label">Em Andamento</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="concluidosCount">0</div>
+          <div class="stat-label">Concluídos</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Sair</button>
+    </div>
 
-  <input type="password" id="senha" placeholder="Digite a senha"/>
-  <button onclick="verificarSenha()">Entrar</button>
+    <div class="container">
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="🔍 Buscar por título..." onkeyup="filtrarPedidos()">
+        <select id="filterStatus" onchange="filtrarPedidos()">
+          <option value="todos">📌 Todos os status</option>
+          <option value="pendente">⏳ Pendentes</option>
+          <option value="em_andamento">🔄 Em Andamento</option>
+          <option value="concluido">✅ Concluídos</option>
+        </select>
+        <select id="filterTipo" onchange="filtrarPedidos()">
+          <option value="todos">🎬 Todos os tipos</option>
+          <option value="Filme">🎥 Filmes</option>
+          <option value="Série">📺 Séries</option>
+          <option value="Canal">📡 Canais</option>
+        </select>
+        <button class="refresh-btn" onclick="carregarPedidos()">🔄 Atualizar</button>
+      </div>
 
-  <div id="painel" class="hidden">
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Tipo</th>
-          <th>Observações</th>
-          <th>ID TMDB</th>
-          <th>Imagem</th>
-        </tr>
-      </thead>
-      <tbody id="tabelaPedidos"></tbody>
-    </table>
+      <div id="pedidosList" class="pedidos-grid"></div>
+    </div>
   </div>
 
   <script>
-    const senhaCorreta = 'Asd12345$';
+    // CONFIGURAÇÕES DO JSONBIN
+    const JSONBIN_BIN_ID = '69c4b50c99b15f1d7836483b';
+    const JSONBIN_API_KEY = '$2a$10$X90k.RwHa/rmje766WbM.eWjUYs5MXyU62c8T/Ccaq.k2nczjtjwNy';
+    const ADMIN_SENHA = 'admin123'; // Altere para sua senha desejada
+
+    let todosPedidos = [];
+    let pedidosFiltrados = [];
 
     function verificarSenha() {
       const senha = document.getElementById('senha').value;
-      if (senha === senhaCorreta) {
-        document.getElementById('painel').classList.remove('hidden');
+      if (senha === ADMIN_SENHA) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
         carregarPedidos();
       } else {
-        alert('Senha incorreta.');
+        alert('Senha incorreta!');
       }
     }
 
-    function carregarPedidos() {
-      fetch('https://script.google.com/macros/s/AKfycbz9qmaA1ZJfJItuMNyEo5-_25vqW-ly3GNz38ubhLEn2dkfO-kFD36UEK-wJG4uPGJorg/exec')
-        .then(res => res.json())
-        .then(data => {
-          const tabela = document.getElementById('tabelaPedidos');
-          tabela.innerHTML = '';
-          data.reverse().forEach(pedido => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${pedido.nome || ''}</td>
-              <td>${pedido.tipo || ''}</td>
-              <td>${pedido.observacoes || ''}</td>
-              <td>${pedido.tmdbId || ''}</td>
-              <td>${pedido.imagem ? `<img src="${pedido.imagem}" alt="Imagem"/>` : ''}</td>
-            `;
-            tabela.appendChild(row);
-          });
-        })
-        .catch(err => {
-          alert("Erro ao carregar pedidos.");
-          console.error(err);
+    function logout() {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('senha').value = '';
+    }
+
+    async function carregarPedidos() {
+      const listDiv = document.getElementById('pedidosList');
+      listDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando pedidos...</p></div>';
+
+      try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          headers: {
+            'X-Master-Key': JSONBIN_API_KEY
+          }
         });
+        const data = await response.json();
+        todosPedidos = data.record.pedidos || [];
+        atualizarEstatisticas();
+        filtrarPedidos();
+      } catch (error) {
+        console.error('Erro:', error);
+        listDiv.innerHTML = '<div class="empty-message">❌ Erro ao carregar pedidos. Verifique sua conexão.</div>';
+      }
+    }
+
+    function atualizarEstatisticas() {
+      const total = todosPedidos.length;
+      const pendentes = todosPedidos.filter(p => p.status === 'pendente').length;
+      const andamento = todosPedidos.filter(p => p.status === 'em_andamento').length;
+      const concluidos = todosPedidos.filter(p => p.status === 'concluido').length;
+      
+      document.getElementById('totalPedidos').textContent = total;
+      document.getElementById('pendentesCount').textContent = pendentes;
+      document.getElementById('andamentoCount').textContent = andamento;
+      document.getElementById('concluidosCount').textContent = concluidos;
+    }
+
+    function filtrarPedidos() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+      const tipoFilter = document.getElementById('filterTipo').value;
+
+      pedidosFiltrados = todosPedidos.filter(pedido => {
+        const matchSearch = pedido.nome.toLowerCase().includes(searchTerm);
+        const matchStatus = statusFilter === 'todos' || pedido.status === statusFilter;
+        const matchTipo = tipoFilter === 'todos' || pedido.tipo === tipoFilter;
+        return matchSearch && matchStatus && matchTipo;
+      });
+
+      renderizarPedidos();
+    }
+
+    function renderizarPedidos() {
+      const listDiv = document.getElementById('pedidosList');
+      
+      if (pedidosFiltrados.length === 0) {
+        listDiv.innerHTML = '<div class="empty-message">📭 Nenhum pedido encontrado</div>';
+        return;
+      }
+
+      listDiv.innerHTML = pedidosFiltrados.map(pedido => `
+        <div class="pedido-card">
+          <div class="pedido-header">
+            <div class="pedido-titulo">${escapeHtml(pedido.nome)}</div>
+            <div class="pedido-data">📅 ${pedido.data}</div>
+          </div>
+          <div class="pedido-content">
+            ${pedido.imagem && pedido.imagem !== '' ? 
+              `<div class="pedido-imagem"><img src="${pedido.imagem}" alt="${escapeHtml(pedido.nome)}" onerror="this.style.display='none'"></div>` : 
+              '<div class="pedido-imagem"><div style="width:100px;height:150px;background:#2a2a2a;border-radius:8px;display:flex;align-items:center;justify-content:center;">📺</div></div>'}
+            <div class="pedido-info">
+              <span class="pedido-tipo">${getIconeTipo(pedido.tipo)} ${pedido.tipo}</span>
+              ${pedido.observacoes ? `<div class="pedido-obs">💬 ${escapeHtml(pedido.observacoes)}</div>` : ''}
+            </div>
+            <div class="pedido-acoes">
+              <select class="status-select status-${pedido.status}" onchange="atualizarStatus(${pedido.id}, this.value)">
+                <option value="pendente" ${pedido.status === 'pendente' ? 'selected' : ''}>⏳ Pendente</option>
+                <option value="em_andamento" ${pedido.status === 'em_andamento' ? 'selected' : ''}>🔄 Em Andamento</option>
+                <option value="concluido" ${pedido.status === 'concluido' ? 'selected' : ''}>✅ Concluído</option>
+              </select>
+              <button class="delete-btn" onclick="removerPedido(${pedido.id})">🗑️ Excluir</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getIconeTipo(tipo) {
+      const icones = {
+        'Filme': '🎥',
+        'Série': '📺',
+        'Canal': '📡'
+      };
+      return icones[tipo] || '📌';
+    }
+
+    async function atualizarStatus(id, novoStatus) {
+      const pedido = todosPedidos.find(p => p.id === id);
+      if (pedido) {
+        pedido.status = novoStatus;
+        await salvarPedidos();
+        atualizarEstatisticas();
+        filtrarPedidos();
+      }
+    }
+
+    async function removerPedido(id) {
+      if (confirm('Tem certeza que deseja excluir este pedido?')) {
+        todosPedidos = todosPedidos.filter(p => p.id !== id);
+        await salvarPedidos();
+        atualizarEstatisticas();
+        filtrarPedidos();
+      }
+    }
+
+    async function salvarPedidos() {
+      try {
+        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': JSONBIN_API_KEY
+          },
+          body: JSON.stringify({ pedidos: todosPedidos })
+        });
+      } catch (error) {
+        console.error('Erro ao salvar:', error);
+        alert('Erro ao salvar alterações');
+      }
     }
   </script>
-
 </body>
 </html>
